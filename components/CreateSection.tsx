@@ -9,6 +9,7 @@ interface CreateSectionProps {
   onUpdate: (index: number, q: Question) => void;
   onRemove: (index: number) => void;
   onToggleSubject: (subject: string, active: boolean) => void;
+  onRemoveSubject: (subject: string) => void;
   onBatchAdd: (qs: Question[]) => void;
   onLogout: () => void;
 }
@@ -19,6 +20,7 @@ const CreateSection: React.FC<CreateSectionProps> = ({
   onUpdate, 
   onRemove, 
   onToggleSubject, 
+  onRemoveSubject,
   onBatchAdd, 
   onLogout 
 }) => {
@@ -76,8 +78,6 @@ const CreateSection: React.FC<CreateSectionProps> = ({
     const zip = new JSZip();
 
     try {
-      // បង្កើត Object ផ្ទុកកូដទាំងអស់ (Hardcoded Source)
-      // នេះគឺជាវិធីដែលធានាថាបានឯកសារគ្រប់ ទោះបីជា fetch មិនបានក៏ដោយ
       const projectFiles: Record<string, string> = {
         "package.json": JSON.stringify({
           "name": "khmer-quiz-pro",
@@ -85,24 +85,22 @@ const CreateSection: React.FC<CreateSectionProps> = ({
           "version": "1.0.0",
           "type": "module",
           "scripts": { "dev": "vite", "build": "tsc && vite build", "preview": "vite preview" },
-          "dependencies": { "react": "^18.3.1", "react-dom": "^18.3.1" },
-          "devDependencies": { "@types/react": "^18.3.1", "@types/react-dom": "^18.3.1", "@vitejs/plugin-react": "^4.3.1", "typescript": "^5.5.2", "vite": "^5.3.1" }
+          "dependencies": { "react": "^19.2.3", "react-dom": "^19.2.3" },
+          "devDependencies": { "@types/react": "^19.2.3", "@types/react-dom": "^19.2.3", "@vitejs/plugin-react": "^4.3.1", "typescript": "^5.5.2", "vite": "^5.3.1" }
         }, null, 2),
         "tsconfig.json": JSON.stringify({
           "compilerOptions": { "target": "ESNext", "lib": ["DOM", "DOM.Iterable", "ESNext"], "allowJs": false, "skipLibCheck": true, "esModuleInterop": true, "allowSyntheticDefaultImports": true, "strict": true, "module": "ESNext", "moduleResolution": "Node", "resolveJsonModule": true, "isolatedModules": true, "noEmit": true, "jsx": "react-jsx" },
           "include": ["**/*.ts", "**/*.tsx"]
         }, null, 2),
         "vite.config.ts": "import { defineConfig } from 'vite';\nimport react from '@vitejs/plugin-react';\n\nexport default defineConfig({\n  plugins: [react()],\n});",
-        "index.html": "<!DOCTYPE html>\n<html lang=\"km\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>កម្រងសំណួរពហុចម្លើយ</title>\n    <script src=\"https://cdn.tailwindcss.com\"></script>\n    <script src=\"https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js\"></script>\n    <link href=\"https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap\" rel=\"stylesheet\">\n    <style>body{font-family:'Kantumruy Pro',sans-serif;margin:0;padding:0;background-image:linear-gradient(rgba(0,0,0,0.45),rgba(0,0,0,0.45)),url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&q=80&w=2500');background-size:cover;background-position:center;background-attachment:fixed;min-height:100vh;}.heading-kh{font-weight:700;}.text-maroon{color:#800000;}.glass-card{background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.5);box-shadow:0 15px 35px rgba(0,0,0,0.25);}</style>\n</head>\n<body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/index.tsx\"></script>\n</body>\n</html>",
+        "index.html": "<!DOCTYPE html>\n<html lang=\"km\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>កម្រងសំណួរពហុចម្លើយ</title>\n    <script src=\"https://cdn.tailwindcss.com\"></script>\n    <script src=\"https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js\"></script>\n    <link href=\"https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap\" rel=\"stylesheet\">\n    <style>body{font-family:'Kantumruy Pro',sans-serif;margin:0;padding:0;background-image:linear-gradient(rgba(0,0,0,0.45),rgba(0,0,0,0.45)),url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&q=80&w=2500');background-size:cover;background-position:center;background-attachment:fixed;min-height:100vh;}.heading-kh{font-weight:700;}.text-maroon{color:#800000;}.bg-maroon{background-color:#800000;}.glass-card{background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.5);box-shadow:0 15px 35px rgba(0,0,0,0.25);}</style>\n</head>\n<body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/index.tsx\"></script>\n</body>\n</html>",
         "types.ts": "export interface Question { subject: string; question: string; options: string[]; correct: number; isActive?: boolean; }\nexport type AppMode = 'play' | 'create';\nexport interface QuizState { currentQuestionIndex: number; score: number; isFinished: boolean; selectedAnswer: number | null; showCorrect: boolean; }\nexport interface SelectedQuizInfo { subject: string; partIndex: number; }",
         "constants.ts": `import { Question } from './types';\n\nexport const SECRET_CODE = "1234";\n\nexport const INITIAL_QUESTIONS: Question[] = ${JSON.stringify(quizData, null, 2)};`,
         "metadata.json": JSON.stringify({ "name": "Quiz Master Pro", "description": "Khmer Quiz Application" }, null, 2)
       };
 
-      // បន្ថែមឯកសារ Configuration ទៅក្នុង ZIP
       Object.entries(projectFiles).forEach(([path, content]) => zip.file(path, content));
 
-      // បន្ថែមឯកសារ Source Code ពីការ Fetch (បើ Fetch បាន) ឬប្រើ Fallback ពីកូដដែលកំពុងរត់
       const sourcePaths = ["index.tsx", "App.tsx", "components/Header.tsx", "components/AuthSection.tsx", "components/CreateSection.tsx", "components/PlaySection.tsx", "components/QuizGame.tsx", "components/LoadingOverlay.tsx"];
       
       for (const path of sourcePaths) {
@@ -110,24 +108,15 @@ const CreateSection: React.FC<CreateSectionProps> = ({
           const res = await fetch(path);
           if (res.ok) {
             zip.file(path, await res.text());
-          } else {
-            // បើ fetch មិនបានក្នុង Production យើងត្រូវឱ្យវាដឹងថា file ទាំងនោះត្រូវតែមាន
-            // ប៉ុន្តែដោយសារ TSX files មិនមានក្នុង production យើងត្រូវតែមានកូដ fallback
-            // ក្នុងករណីនេះ យើងសន្មតថាអ្នកប្រើអាចយកកូដពីកន្លែងដើមបាន។
-            // ប៉ុន្តែដើម្បីដោះស្រាយបញ្ហាលោកគ្រូឱ្យបាន ១០០% ខ្ញុំនឹងព្យាយាមទាញពី window._rawSources បើមាន
-            console.warn(`Fetch failed for ${path}, but continuing...`);
           }
         } catch (e) { }
       }
 
-      // ដើម្បីធានាថាបាន Code ពេញលេញ លោកគ្រូត្រូវប្រាកដថា ឯកសារ index.tsx និង App.tsx មានក្នុង ZIP
-      // ប្រសិនបើក្នុង ZIP នៅតែខ្វះ ខ្ញុំបានបន្ថែម alert ឱ្យលោកគ្រូប្រើប៊ូតុង "Copy All Code" ជំនួសវិញ
       const blob = await zip.generateAsync({ type: "blob" });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = `Khmer_Quiz_Full_Source.zip`;
       link.click();
-      alert("ទាញយកគម្រោងរួចរាល់! ប្រសិនបើខ្វះឯកសារ សូមពិនិត្យមើលការទាញយកក្នុង Browser។");
     } catch (e) {
       alert("កំហុសក្នុងការបង្កើត ZIP");
     } finally {
@@ -222,9 +211,39 @@ const CreateSection: React.FC<CreateSectionProps> = ({
             <h2 className="text-xl font-bold heading-kh text-maroon">🚀 Smart Bulk Import</h2>
             <input type="text" value={bulkSubject} onChange={(e) => setBulkSubject(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-100 outline-none small-kh font-bold" placeholder="មុខវិជ្ជា" />
             <textarea value={bulkText} onChange={(e) => setBulkText(e.target.value)} className="w-full px-4 py-4 rounded-2xl border border-gray-100 min-h-[300px] small-kh text-sm bg-gray-50" placeholder="១. សំណួរ?&#10;ក. ចម្លើយ (ចម្លើយត្រឹមត្រូវ)..." />
-            <button onClick={handleBulkAdd} className="w-full bg-maroon text-white font-black py-4 rounded-xl">បញ្ចូលទាំងអស់</button>
+            <button 
+              onClick={handleBulkAdd} 
+              className="w-full bg-maroon hover:bg-maroon-dark text-white font-black py-4 rounded-xl shadow-xl transition-all active:scale-[0.98]"
+            >
+              បញ្ចូលទាំងអស់
+            </button>
           </div>
         )}
+      </div>
+
+      <div className="glass-card rounded-3xl shadow-lg p-8 border border-white/50">
+        <h3 className="text-lg font-bold mb-4 heading-kh text-maroon">👁️ បើក/បិទ និងលុបមុខវិជ្ជា</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {Object.entries(subjectsVisibility).map(([subName, isActive]) => (
+            <div key={subName} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+              <span className="font-bold text-gray-700 heading-kh text-sm truncate pr-4">{subName}</span>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => onToggleSubject(subName, !isActive)} 
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all ${isActive ? 'bg-green-500 text-white' : 'bg-gray-400 text-white'}`}
+                >
+                  {isActive ? 'បង្ហាញ' : 'បិទ'}
+                </button>
+                <button 
+                  onClick={() => onRemoveSubject(subName)} 
+                  className="px-3 py-1.5 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all text-[10px] font-black uppercase"
+                >
+                  លុប
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="glass-card rounded-3xl shadow-lg p-8 border border-white/50">

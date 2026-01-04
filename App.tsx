@@ -79,6 +79,12 @@ const App: React.FC = () => {
     setQuizData(prev => prev.map(q => q.subject === subjectName ? { ...q, isActive: active } : q));
   };
 
+  const handleRemoveSubject = (subjectName: string) => {
+    if (confirm(`តើអ្នកប្រាកដទេថាចង់លុបមុខវិជ្ជា "${subjectName}" និងសំណួរទាំងអស់ក្នុងមុខវិជ្ជានេះ?`)) {
+      setQuizData(prev => prev.filter(q => q.subject !== subjectName));
+    }
+  };
+
   const handleBatchAdd = (qs: Question[]) => {
     setQuizData(prev => [...prev, ...qs.map(q => ({ ...q, isActive: q.isActive ?? true }))]);
   };
@@ -120,6 +126,7 @@ const App: React.FC = () => {
                 onUpdate={handleUpdateQuestion}
                 onRemove={handleRemoveQuestion}
                 onToggleSubject={handleToggleSubject}
+                onRemoveSubject={handleRemoveSubject}
                 onLogout={() => setIsAdmin(false)}
                 onBatchAdd={handleBatchAdd} 
               />
