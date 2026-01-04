@@ -163,10 +163,11 @@ const CreateSection: React.FC<CreateSectionProps> = ({
     setIsExporting(true);
     const zip = new JSZip();
     try {
+      // បង្កើត constants.ts ជាមួយទិន្នន័យបច្ចុប្បន្ន
       const constantsContent = `import { Question } from './types';\n\nexport const SECRET_CODE = "1234";\n\nexport const INITIAL_QUESTIONS: Question[] = ${JSON.stringify(quizData, null, 2)};`;
       zip.file("constants.ts", constantsContent);
       
-      // បង្កើត tsconfig.json ដែលមានលក្ខណៈ Standard សម្រាប់ React/Vite
+      // បង្កើត tsconfig.json ដែលមានលក្ខណៈ Standard
       const tsconfig = {
         "compilerOptions": {
           "target": "ESNext",
@@ -190,7 +191,7 @@ const CreateSection: React.FC<CreateSectionProps> = ({
       };
       zip.file("tsconfig.json", JSON.stringify(tsconfig, null, 2));
 
-      // បង្កើត package.json ដែលពេញលេញ
+      // បង្កើត package.json ពេញលេញ
       const packageJson = {
         "name": "khmer-quiz-project",
         "private": true,
@@ -217,6 +218,7 @@ const CreateSection: React.FC<CreateSectionProps> = ({
 
       zip.file("vite.config.ts", `import { defineConfig } from 'vite';\nimport react from '@vitejs/plugin-react';\n\nexport default defineConfig({\n  plugins: [react()],\n});`);
 
+      // បញ្ជីឯកសារដែលត្រូវទាញយក (យើងសន្មតថា Path ទាំងនេះអាច fetch បានក្នុង preview)
       const filePaths = ["index.html", "index.tsx", "App.tsx", "types.ts", "metadata.json", "components/Header.tsx", "components/AuthSection.tsx", "components/CreateSection.tsx", "components/PlaySection.tsx", "components/QuizGame.tsx", "components/LoadingOverlay.tsx"];
       
       for (const path of filePaths) {
@@ -225,12 +227,15 @@ const CreateSection: React.FC<CreateSectionProps> = ({
           if (response.ok) {
             let text = await response.text();
             if (path === "index.html") {
+              // លុប importmap ចេញ ដើម្បីឱ្យវាដើរតាម Standard NPM
               text = text.replace(/<script type="importmap">[\s\S]*?<\/script>/, '');
               text = text.replace('</body>', '    <script type="module" src="/index.tsx"></script>\n</body>');
             }
             zip.file(path, text);
           }
-        } catch (e) { console.warn(`Skip file: ${path}`); }
+        } catch (e) {
+          console.warn(`មិនអាចទាញយកឯកសារ: ${path}`);
+        }
       }
 
       const blob = await zip.generateAsync({ type: "blob" });
@@ -238,6 +243,7 @@ const CreateSection: React.FC<CreateSectionProps> = ({
       link.href = URL.createObjectURL(blob);
       link.download = `Quiz_Project_Export.zip`;
       link.click();
+      alert("គម្រោងត្រូវបានបង្កើតជា ZIP រួចរាល់! ប្រសិនបើឯកសារមិនគ្រប់គ្រាន់ សូមពិនិត្យមើល Console របស់ Browser។");
     } catch (e) { 
       alert("កំហុសក្នុងការបង្កើត ZIP"); 
     } finally { 
